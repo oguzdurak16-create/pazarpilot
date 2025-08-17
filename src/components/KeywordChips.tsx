@@ -14,8 +14,8 @@ export default function KeywordChips({ competitorId }: { competitorId: string })
         if (!r.ok) throw new Error(await r.text());
         const data: KW[] = await r.json();
         setRows(data);
-      } catch (e: any) {
-        setErr(e?.message || "error");
+      } catch (e: unknown) {
+        setErr(e instanceof Error ? e.message : String(e));
       }
     })();
   }, [competitorId]);
@@ -27,7 +27,10 @@ export default function KeywordChips({ competitorId }: { competitorId: string })
   return (
     <div className="flex flex-wrap gap-2">
       {rows.map((k) => (
-        <span key={k.keyword} className="px-2 py-1 text-xs rounded-full bg-gray-100 border text-gray-700">
+        <span
+          key={k.keyword}
+          className="px-2 py-1 text-xs rounded-full bg-gray-100 border text-gray-700"
+        >
           {k.keyword} <span className="opacity-60">×{k.count}</span>
         </span>
       ))}

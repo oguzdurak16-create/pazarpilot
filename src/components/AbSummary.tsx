@@ -21,8 +21,8 @@ export default function AbSummary({ storeId }: { storeId: string }) {
         if (!r.ok) throw new Error(await r.text());
         const data: Row[] = await r.json();
         setRows(data);
-      } catch (e: any) {
-        setErr(e?.message || "error");
+      } catch (e: unknown) {
+        setErr(e instanceof Error ? e.message : String(e));
       }
     })();
   }, [storeId]);
@@ -31,7 +31,8 @@ export default function AbSummary({ storeId }: { storeId: string }) {
   if (!rows) return <div className="text-sm text-gray-500">Yükleniyor…</div>;
   if (!rows.length) return <div className="text-sm text-gray-500">Kayıt yok.</div>;
 
-  const fmt = (n: any) => new Intl.NumberFormat("tr-TR").format(Number(n));
+  const fmt = (n: number | string | null | undefined) =>
+    new Intl.NumberFormat("tr-TR").format(Number(n ?? 0));
 
   return (
     <div className="w-full overflow-x-auto">
@@ -68,7 +69,7 @@ export default function AbSummary({ storeId }: { storeId: string }) {
         </tbody>
       </table>
       <div className="text-[11px] text-gray-500 mt-2">
-        Kaynak: /api/ab-summary — demo store: {storeId.slice(0,8)}…
+        Kaynak: /api/ab-summary — demo store: {storeId.slice(0, 8)}…
       </div>
     </div>
   );

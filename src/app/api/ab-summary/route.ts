@@ -1,5 +1,17 @@
-// src/app/api/ab-summary/route.ts
 import { neon } from "@neondatabase/serverless";
+
+type AbRow = {
+  version: string;
+  impressions: number;
+  clicks: number;
+  add_to_cart: number;
+  orders: number;
+  revenue: string | number;
+};
+
+function getErrorMessage(err: unknown) {
+  return err instanceof Error ? err.message : String(err);
+}
 
 export async function GET(req: Request) {
   try {
@@ -8,8 +20,10 @@ export async function GET(req: Request) {
     if (!storeId) {
       return Response.json({ error: "store_id required" }, { status: 400 });
     }
+
     const sql = neon(process.env.DATABASE_URL!);
-    const rows = await sql/*sql*/`
+
+    const rows = (await sql/* sql */`
       SELECT
         l.version,
         SUM(COALESCE(m.impressions,0))::int AS impressions,
@@ -22,10 +36,15 @@ export async function GET(req: Request) {
       LEFT JOIN listing_metrics m ON m.listing_id = l.id
       WHERE p.store_id = ${storeId}
       GROUP BY l.version
-      ORDER BY l.version ASC;`;
+      ORDER BY l.version ASC;
+    `) as AbRow[];
+
     return Response.json(rows);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("ab-summary error:", err);
-    return Response.json({ error: "internal_error", detail: String(err?.message || err) }, { status: 500 });
+    return Response.json(
+      { error: "internal_error", detail: getErrorMessage(err) },
+      { status: 500 }
+    );
   }
 }
